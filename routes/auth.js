@@ -88,4 +88,41 @@ router.get('/me', auth, async (req, res) => {
 });
 
 
+//admin- Update user role
+router.patch('/users/:id/role', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user || user.role !== 'admin') {
+            return res.status(403).json({ message: 'Admin access required' });
+        }
+
+        const targetUser = await User.findById(req.params.id);
+        if (!targetUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        targetUser.role = req.body.role;
+        await targetUser.save();
+
+        res.json({ message: 'User role updated successfully', user: targetUser });
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating user role', error: error.message });
+    }
+});
+
+//Admin: Get all users
+router.get('/users', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user || user.role !== 'admin') {
+            return res.status(403).json({ message: 'Admin access required' });
+        }
+
+        const users = await User.find().select('-password');
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching users', error: error.message });
+    }
+});
+
 module.exports = router;
